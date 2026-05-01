@@ -1,6 +1,39 @@
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                cr7gold: '#d4af37',
+                cr7dark: '#111111',
+                cr7black: '#050505',
+            },
+            fontFamily: {
+                sans: ['Montserrat', 'sans-serif'],
+            },
+            backgroundImage: {
+                'page-glow': 'radial-gradient(1200px circle at 18% 12%, rgba(212, 175, 55, 0.09), transparent 62%), radial-gradient(1400px circle at 82% 18%, rgba(212, 175, 55, 0.05), transparent 68%), radial-gradient(1100px circle at 50% 88%, rgba(212, 175, 55, 0.07), transparent 62%), linear-gradient(180deg, #050505 0%, #070707 45%, #050505 100%)',
+            },
+            keyframes: {
+                fadeUp: {
+                    '0%': { opacity: '0', transform: 'translateY(40px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0px)' },
+                },
+                reveal: {
+                    '0%': { opacity: '0', transform: 'scale(0.96)' },
+                    '100%': { opacity: '1', transform: 'scale(1)' },
+                },
+            },
+            animation: {
+                fadeUp: 'fadeUp 0.85s cubic-bezier(0.16, 1, 0.3, 1) both',
+                reveal: 'reveal 1.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+            },
+        },
+    },
+};
+
 (() => {
     'use strict';
 
+    // ==================== MOBILE NAVIGATION ====================
     const setupMobileNavigation = () => {
         const navToggle = document.getElementById('navToggle');
         const mobileMenu = document.getElementById('mobileNav');
@@ -11,7 +44,7 @@
         const backdrop = mobileMenu.querySelector('[data-mobile="backdrop"]');
         const closeBtn = mobileMenu.querySelector('[data-mobile="close"]');
         const menuLinks = mobileMenu.querySelectorAll('[data-mobile="link"]');
-        
+
         const iconTop = navToggle.querySelector('[data-bar="top"]');
         const iconMid = navToggle.querySelector('[data-bar="mid"]');
         const iconBot = navToggle.querySelector('[data-bar="bot"]');
@@ -32,8 +65,6 @@
             iconMid?.classList.add('opacity-0');
             iconBot?.classList.add('-translate-y-[6px]', '-rotate-45');
             iconBot?.classList.remove('translate-y-[6px]');
-
-            panel?.focus();
         };
 
         const closeMenu = () => {
@@ -51,7 +82,7 @@
             iconBot?.classList.add('translate-y-[6px]');
 
             setTimeout(() => mobileMenu.classList.add('hidden'), 300);
-        }; 
+        };
 
         navToggle.addEventListener('click', () => {
             mobileMenu.classList.contains('hidden') ? openMenu() : closeMenu();
@@ -66,6 +97,7 @@
         });
     };
 
+    // ==================== SCROLL REVEAL ANIMATION ====================
     const setupScrollReveal = () => {
         const elements = document.querySelectorAll('[data-animate]');
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,112 +112,174 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
                 if (!entry.isIntersecting) return;
-                
+
                 const el = entry.target;
                 el.style.animationDelay = `${el.getAttribute('data-delay') || 0}ms`;
                 el.classList.add('animate-fadeUp');
                 observer.unobserve(el);
             });
-        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
 
         elements.forEach((el) => observer.observe(el));
     };
 
+    // ==================== POPUPS & LIGHTBOX ====================
     const setupPopups = () => {
-        const popup = document.getElementById('milkyway-popup');
-        const content = document.getElementById('popup-content');
-        const closeBtn = document.getElementById('milkyway-popup-close');
-        
+        // Milkyway Popup
+        const milkywayPopup = document.getElementById('milkyway-popup');
+        const milkywayClose = document.getElementById('milkyway-popup-close');
+
+        // Client Gallery Popups
+        const clientPopups = {
+            jawara: document.getElementById('jawara-popup'),
+            oho: document.getElementById('oho-popup'),
+            katsugo: document.getElementById('katsugo-popup')
+        };
+
+        // Lightbox
         const lightbox = document.getElementById('image-lightbox');
         const lightboxImg = document.getElementById('lightbox-img');
         const lightboxCaption = document.getElementById('lightbox-caption');
         const closeLightboxBtn = document.getElementById('close-lightbox');
-        
-        const galleryImages = document.querySelectorAll('#gallery-grid img');
-    
-        window.showMilkywayPopup = () => {
-            if (!popup || !content) return;
-            
-            popup.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; 
-    
+
+        // ── Lightbox open/close ──────────────────────────────────
+        const openLightbox = (imgSrc, caption = "") => {
+            if (!lightbox || !lightboxImg) return;
+            lightboxImg.src = imgSrc;
+            if (lightboxCaption) lightboxCaption.textContent = caption;
+
+            lightbox.classList.remove('hidden');
             requestAnimationFrame(() => {
-                popup.classList.remove('opacity-0', 'pointer-events-none');
-                popup.classList.add('opacity-100');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
+                lightbox.classList.add('opacity-100');
+                lightbox.classList.remove('opacity-0', 'pointer-events-none');
             });
         };
-    
-        const closePopup = () => {
-            if (!popup || !content) return;
-    
-            popup.classList.remove('opacity-100');
-            popup.classList.add('opacity-0');
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-    
-            setTimeout(() => {
-                popup.classList.add('hidden', 'pointer-events-none');
-                document.body.style.overflow = ''; 
-            }, 300);
+
+        const closeLightbox = () => {
+            if (!lightbox) return;
+            lightbox.classList.remove('opacity-100');
+            lightbox.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => lightbox.classList.add('hidden'), 300);
         };
-    
-        galleryImages.forEach(img => {
-            img.addEventListener('click', () => {
-                if (!lightbox || !lightboxImg) return;
-    
-                lightboxImg.src = img.src;
-                lightboxCaption.innerText = img.alt || "Milkyway Indonesia";
-                
-                lightbox.classList.remove('hidden');
-                
-                requestAnimationFrame(() => {
-                    lightbox.classList.remove('opacity-0', 'pointer-events-none');
-                    lightbox.classList.add('opacity-100');
-                    lightboxImg.classList.remove('scale-95');
-                    lightboxImg.classList.add('scale-100');
+
+        // ── Helper: bind lightbox to all imgs inside a container ──
+        const bindGalleryImages = (container) => {
+            if (!container) return;
+            container.querySelectorAll('img').forEach(img => {
+                // avoid duplicate listeners
+                if (img.dataset.lightboxBound) return;
+                img.dataset.lightboxBound = 'true';
+                img.style.cursor = 'zoom-in';
+                img.addEventListener('click', () => {
+                    openLightbox(img.src, img.alt || '');
                 });
             });
-        });
-    
-        const closeLightbox = () => {
-            if (!lightbox || !lightboxImg) return;
-    
-            lightbox.classList.remove('opacity-100');
-            lightbox.classList.add('opacity-0');
-            lightboxImg.classList.remove('scale-100');
-            lightboxImg.classList.add('scale-95');
-    
-            setTimeout(() => {
-                lightbox.classList.add('hidden', 'pointer-events-none');
-            }, 300);
         };
-    
 
-        closeBtn?.addEventListener('click', closePopup);
+        // ── Milkyway Popup ────────────────────────────────────────
+        // Made to be faster and lighter feeling!
+        window.showMilkywayPopup = () => {
+            if (!milkywayPopup) return;
+
+            // Instantly show (no hidden -> flex reflow delay)
+            milkywayPopup.classList.remove('hidden');
+            milkywayPopup.classList.remove('opacity-0', 'pointer-events-none');
+            milkywayPopup.classList.add('opacity-100');
+            document.body.style.overflow = 'hidden';
+
+            // Bind lightbox to milkyway gallery images
+            // Debounce to avoid double-binding
+            if (!milkywayPopup.__imagesBound) {
+                bindGalleryImages(document.getElementById('gallery-grid'));
+                milkywayPopup.__imagesBound = true;
+            }
+        };
+
+        const closeMilkywayPopup = () => {
+            if (!milkywayPopup) return;
+
+            milkywayPopup.classList.remove('opacity-100');
+            milkywayPopup.classList.add('opacity-0', 'pointer-events-none');
+            // Hide "faster" on close for snappier UI, no wait for 310ms
+            setTimeout(() => {
+                milkywayPopup.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 150); // Reduced delay for more lightweight effect
+        };
+
+        // ── Client Gallery Popups ( OHO / KatsuGO) ───────
+        window.showClientGalleryPopup = (client) => {
+            const popup = clientPopups[client];
+            if (!popup) return;
+
+            popup.classList.remove('hidden');
+            popup.classList.remove('opacity-0', 'pointer-events-none');
+            popup.classList.add('opacity-100');
+            document.body.style.overflow = 'hidden';
+
+            // Bind lightbox to this popup's images just once per popup
+            if (!popup.__imagesBound) {
+                bindGalleryImages(popup);
+                popup.__imagesBound = true;
+            }
+        };
+
+        window.closeClientGalleryPopup = (client) => {
+            const popup = clientPopups[client];
+            if (!popup) return;
+
+            popup.classList.remove('opacity-100');
+            popup.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 150); // Reduced delay for more lightweight
+        };
+
+        // ── Event Listeners ───────────────────────────────────────
+        milkywayClose?.addEventListener('click', closeMilkywayPopup);
         closeLightboxBtn?.addEventListener('click', closeLightbox);
-    
-        popup?.addEventListener('mousedown', (e) => {
-            if (e.target === popup) closePopup();
+
+        milkywayPopup?.addEventListener('mousedown', (e) => {
+            if (e.target === milkywayPopup) closeMilkywayPopup();
         });
-    
+
         lightbox?.addEventListener('mousedown', (e) => {
             if (e.target === lightbox) closeLightbox();
         });
-    
-        window.addEventListener('keydown', (e) => {
+
+        document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (lightbox && !lightbox.classList.contains('hidden')) {
                     closeLightbox();
-                } else if (popup && !popup.classList.contains('hidden')) {
-                    closePopup();
+                } else if (milkywayPopup && !milkywayPopup.classList.contains('hidden')) {
+                    closeMilkywayPopup();
+                } else {
+                    Object.keys(clientPopups).forEach(key => {
+                        const popup = clientPopups[key];
+                        if (popup && !popup.classList.contains('hidden')) {
+                            window.closeClientGalleryPopup(key);
+                        }
+                    });
                 }
             }
         });
     };
-    
-    setupMobileNavigation();
-    setupScrollReveal();
-    setupPopups();
+
+    // ==================== INITIALIZE ALL ====================
+    const init = () => {
+        setupMobileNavigation();
+        setupScrollReveal();
+        setupPopups();
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
 })();
