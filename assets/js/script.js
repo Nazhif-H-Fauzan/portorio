@@ -180,7 +180,7 @@ tailwind.config = {
         };
 
         // ── Milkyway Popup ────────────────────────────────────────
-        // Made to be faster and lighter feeling!
+        // Tetap sama / tidak diubah (referensi)
         window.showMilkywayPopup = () => {
             if (!milkywayPopup) return;
 
@@ -211,17 +211,24 @@ tailwind.config = {
         };
 
         // ── Client Gallery Popups ( OHO / KatsuGO) ───────
+        // Disamakan dengan logic milkyway: efek show/hide cepat, dan bind lightbox hanya sekali per popup
         window.showClientGalleryPopup = (client) => {
             const popup = clientPopups[client];
             if (!popup) return;
 
+            // Instantly show (no hidden -> flex reflow delay)
             popup.classList.remove('hidden');
             popup.classList.remove('opacity-0', 'pointer-events-none');
             popup.classList.add('opacity-100');
             document.body.style.overflow = 'hidden';
 
             // Bind lightbox to this popup's images just once per popup
+            // Sama seperti milkyway: bind hanya sekali per modal
             if (!popup.__imagesBound) {
+                // Cari grid galeri utama dalam popup (versi aman)
+                // Kalau ada "gallery-grid" child di masing-masing popup, bisa ganti dengan: 
+                //   bindGalleryImages(popup.querySelector('.gallery-grid'))
+                // Tapi dari HTML, tidak ada .gallery-grid untuk OHO/KatsuGO, jadi bind langsung ke seluruh popup
                 bindGalleryImages(popup);
                 popup.__imagesBound = true;
             }
@@ -233,10 +240,11 @@ tailwind.config = {
 
             popup.classList.remove('opacity-100');
             popup.classList.add('opacity-0', 'pointer-events-none');
+            // Samakan delayed hide (150ms) seperti milkywayPopup
             setTimeout(() => {
                 popup.classList.add('hidden');
                 document.body.style.overflow = '';
-            }, 150); // Reduced delay for more lightweight
+            }, 150);
         };
 
         // ── Event Listeners ───────────────────────────────────────
@@ -245,6 +253,16 @@ tailwind.config = {
 
         milkywayPopup?.addEventListener('mousedown', (e) => {
             if (e.target === milkywayPopup) closeMilkywayPopup();
+        });
+
+        // Samakan: tutup popup client gallery jika backdrop diklik (di luar modal content)
+        Object.keys(clientPopups).forEach(clientKey => {
+            const popup = clientPopups[clientKey];
+            if (popup) {
+                popup.addEventListener('mousedown', (e) => {
+                    if (e.target === popup) window.closeClientGalleryPopup(clientKey);
+                });
+            }
         });
 
         lightbox?.addEventListener('mousedown', (e) => {
